@@ -54,7 +54,7 @@ struct ARSCNViewContainer: UIViewRepresentable {
 
             for word in randomWords {
                 let text = SCNText(string: word, extrusionDepth: 2)
-                text.font = UIFont(name: "HelveticaNeue-Bold", size: 20) ?? UIFont.systemFont(ofSize: 20)
+                text.font = UIFont(name: "harutegakifont", size: 20) ?? UIFont.systemFont(ofSize: 20)
                 text.flatness = 0.05
                 text.firstMaterial?.diffuse.contents = UIColor.black
 
@@ -77,7 +77,7 @@ struct ARSCNViewContainer: UIViewRepresentable {
                     let dx = existingPos.x - position.x
                     let dz = existingPos.z - position.z
                     let distance = sqrt(dx*dx + dz*dz)
-                    return distance < 0.06  // 最低6cmは離す
+                    return distance < 0.1  // 最低6cmは離す
                 }) && tries < 10
 
                 textNode.position = position
