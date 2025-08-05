@@ -12,24 +12,29 @@ struct ContentView : View {
 
     var body: some View {
         RealityView { content in
+                    // 立方体モデル作成
+                    let model = Entity()
+                    let mesh = MeshResource.generateBox(size: 0.2, cornerRadius: 0.01)
+                    let material = SimpleMaterial(color: .gray, roughness: 0.1, isMetallic: false)
+                    model.components.set(ModelComponent(mesh: mesh, materials: [material]))
+                    model.position = [0, 0.1, -0.3]
 
-            // Create a cube model
-            let model = Entity()
-            let mesh = MeshResource.generateBox(size: 0.1, cornerRadius: 0.005)
-            let material = SimpleMaterial(color: .gray, roughness: 0.15, isMetallic: true)
-            model.components.set(ModelComponent(mesh: mesh, materials: [material]))
-            model.position = [0, 0.05, 0]
+                    // ライト（方向性ライト）作成
+                    let lightEntity = Entity()
+                    let light = DirectionalLightComponent(color: .white, intensity: 1500, isRealWorldProxy: false)
+                    lightEntity.components.set(light)
+                    lightEntity.position = [0, 1, 1]
 
-            // Create horizontal plane anchor for the content
-            let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: SIMD2<Float>(0.2, 0.2)))
-            anchor.addChild(model)
+                    // アンカー作成（水平面）
+                    let anchor = AnchorEntity(.plane(.horizontal, classification: .any, minimumBounds: [0.2, 0.2]))
+                    anchor.addChild(model)
+                    anchor.addChild(lightEntity)
 
-            // Add the horizontal plane anchor to the scene
-            content.add(anchor)
+                    content.add(anchor)
 
-            content.camera = .spatialTracking
+                    content.camera = .spatialTracking
+                }
 
-        }
         .edgesIgnoringSafeArea(.all)
     }
 

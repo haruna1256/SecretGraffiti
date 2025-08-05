@@ -10,9 +10,22 @@
 		C358122B2E41C79E00C17B7D /* SecretGraffiti.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = SecretGraffiti.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		C358124C2E41DE1700C17B7D /* Exceptions for "SecretGraffiti" folder in "SecretGraffiti" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = C358122A2E41C79E00C17B7D /* SecretGraffiti */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		C358122D2E41C79E00C17B7D /* SecretGraffiti */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				C358124C2E41DE1700C17B7D /* Exceptions for "SecretGraffiti" folder in "SecretGraffiti" target */,
+			);
 			path = SecretGraffiti;
 			sourceTree = "<group>";
 		};
@@ -255,6 +268,7 @@
 				DEVELOPMENT_TEAM = 87W7C4VKFR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SecretGraffiti/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -286,6 +300,7 @@
 				DEVELOPMENT_TEAM = 87W7C4VKFR;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = SecretGraffiti/Info.plist;
 				INFOPLIST_KEY_NSCameraUsageDescription = "";
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
