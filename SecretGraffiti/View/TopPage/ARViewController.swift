@@ -4,121 +4,102 @@
 //
 //  Created by 川岸遥奈 on 2025/08/05.
 //
-
-// 現実の画面に文字列などを表示する画面
 import SwiftUI
-import RealityKit
+import ARKit
+import SceneKit
 
-struct ARViewController: View {
-    // ランダムに選ぶ単語リスト
+struct ARSCNViewContainer: UIViewRepresentable {
     let words = [
-        "ウェーイ",
-        "やったー、できた！",
-        "まじかー",
-        "エモい",
-        "尊い",
-        "それな",
-        "ワンチャンある",
-        "草",
-        "てかさ",
-        "めっちゃわかる",
-        "やばい",
-        "だるい",
-        "授業眠いね",
-        "バイトだるい",
-        "えぐい",
-        "ぴえん",
-        "好きぴ",
-        "つらたん",
-        "まじ卍",
-        "あー、お腹すいた"
-    ]
-    
-    var body: some View {
-        RealityView{ content in
-            // 壁（垂直平面）を認識したときに設置されるアンカーを作成
-            let anchor = AnchorEntity(
-                plane: .vertical,               // 垂直面（壁）を対象
-                classification: .any,           // どの種類の壁でもOK
-                minimumBounds: [0.3,0.3]        // 最低30cm四方の壁を検出対象に
-            )
-            
-            // 単語リストからランダムに３個選ぶ
-            let randomWords = words.shuffled().prefix(3)
-            
-            // 選んだ単語を３個それぞれランダムな位置に表示
+        "ウェーイ", "やったー、できた！", "まじかー", "エモい", "尊い",
+        "それな", "ワンチャン", "草", "てかさ", "めっちゃわかる",
+        "やばい", "だるい", "授業眠い", "バイトだるい", "えぐい",
+        "ぴえん", "好きぴ", "つらたん", "まじ卍", "あー、お腹すいた"
+    ];
+
+    func makeUIView(context: Context) -> ARSCNView {
+        let sceneView = ARSCNView(frame: .zero)
+        sceneView.delegate = context.coordinator
+
+        // ARWorldTrackingConfigurationで水平面を検出
+        let config = ARWorldTrackingConfiguration()
+        config.planeDetection = [.horizontal, .vertical]
+        sceneView.session.run(config)
+
+        // シーン作成
+        sceneView.scene = SCNScene()
+        return sceneView
+    }
+
+    func updateUIView(_ uiView: ARSCNView, context: Context) {}
+
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+
+    class Coordinator: NSObject, ARSCNViewDelegate {
+        var parent: ARSCNViewContainer
+
+        init(_ parent: ARSCNViewContainer) {
+            self.parent = parent
+            super.init()
+        }
+
+        func renderer(_ renderer: SCNSceneRenderer, didAdd node: SCNNode, for anchor: ARAnchor) {
+            guard let planeAnchor = anchor as? ARPlaneAnchor else { return }
+
+            let count = Int.random(in: 1...3)
+            let randomWords = parent.words.shuffled().prefix(count)
+
+            var placedPositions: [SCNVector3] = []
+
             for word in randomWords {
-                // 文字列からRealiyKitで使うテキスト平面モデルを作成
-                let textEntity = createTextEntity(text: word)
-                
-                // 壁平面上のランダムなX,Y位置（単位はメートル）
-                let randomX = Float.random(in: -0.1...0.1)
-                let randomY = Float.random(in: -0.1...0.1)
-                
-                // Zは壁にぴったり張り付くので０に設定
-                textEntity.position = SIMD3(randomX,randomY,0)
-                
-                anchor.addChild(textEntity)
+                let text = SCNText(string: word, extrusionDepth: 2)
+                text.font = UIFont(name: "HelveticaNeue-Bold", size: 20) ?? UIFont.systemFont(ofSize: 20)
+                text.flatness = 0.05
+                text.firstMaterial?.diffuse.contents = UIColor.black
+
+                let textNode = SCNNode(geometry: text)
+                let scale: Float = 0.015
+                textNode.scale = SCNVector3(scale, scale, scale)
+
+                // 衝突しない位置を探す
+                var position: SCNVector3
+                var tries = 0
+                repeat {
+                    let randomX = Float.random(in: -0.1...0.1)
+                    let randomZ = Float.random(in: -0.1...0.1)
+                    position = SCNVector3(randomX, 0, randomZ)
+
+                    tries += 1
+
+                    // 既存の位置との距離をチェック
+                } while placedPositions.contains(where: { existingPos in
+                    let dx = existingPos.x - position.x
+                    let dz = existingPos.z - position.z
+                    let distance = sqrt(dx*dx + dz*dz)
+                    return distance < 0.06  // 最低6cmは離す
+                }) && tries < 10
+
+                textNode.position = position
+
+                if planeAnchor.alignment == .vertical {
+                    textNode.eulerAngles.x = -.pi / 2
+                }
+
+                placedPositions.append(position)
+                node.addChildNode(textNode)
             }
-            
-            // シーンにアンカーを追加して描画開始
-            content.add(anchor)
-            
-            // カメラを空間追跡モードに設定
-            content.camera = .spatialTracking
         }
-        
-        // 画面いっぱいに表示
-        .edgesIgnoringSafeArea(.all)
     }
-    
-    
-    // 文字列をRealityKitの3Dオブジェクトに変換する関数
-    func createTextEntity(text: String) -> ModelEntity {
-        let uiImage = textToUIImage(text: text)
-        
-        guard let cgImage = uiImage.cgImage else {
-            fatalError("UIImageからCGImageを取得できません")
-        }
-        
-        // RealityKit 4以降 (iOS 18+) の初期化方法
-        let texture = try! TextureResource(image: cgImage, options: .init(semantic: .color))
-        
-        let planeSize: Float = 0.15
-        let mesh = MeshResource.generatePlane(width: planeSize, height: planeSize)
-        
-        // UnlitMaterialでテクスチャを貼り付ける
-        var material = UnlitMaterial()
-        material.color = UnlitMaterial.BaseColor(
-            texture: MaterialParameters.Texture(texture)
-        )
-        
-        
-        
-        
-        return ModelEntity(mesh: mesh, materials: [material])
-    }
-    
-    
-    // UILabelを使って文字列をUIImageに変換するヘルパー関数
-    func textToUIImage(text: String) -> UIImage {
-        let label = UILabel()
-        label.text = text
-        label.font = UIFont.systemFont(ofSize: 48) // フォントサイズ
-        label.textColor = .black
-        label.backgroundColor = .clear
-        label.sizeToFit() // ラベルのサイズをテキストに合わせて自動調整
-        
-        // UIGraphicsを使ってUILabelを画像化
-        UIGraphicsBeginImageContextWithOptions(label.bounds.size, false, 0)
-        label.layer.render(in: UIGraphicsGetCurrentContext()!)
-        let image = UIGraphicsGetImageFromCurrentImageContext()!
-        UIGraphicsEndImageContext()
-        
-        return image
+}
+
+struct ARSCNTextView: View {
+    var body: some View {
+        ARSCNViewContainer()
+            .edgesIgnoringSafeArea(.all)
     }
 }
 
 #Preview {
-    ARViewController()
+    ARSCNTextView()
 }

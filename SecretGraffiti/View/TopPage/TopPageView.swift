@@ -12,7 +12,7 @@ import RealityKit
 
 struct TopPageView: View {
     var body: some View {
-        ARViewController()
+        ARSCNTextView()
             .edgesIgnoringSafeArea(.all)
     }
 }
